@@ -42,12 +42,16 @@ func (c *Client) Request(method string, url goja.Value, args ...goja.Value) (*Re
 
 	var body interface{}
 	var params goja.Value
+	var jpath string
 
 	if len(args) > 0 {
 		body = args[0].Export()
 	}
 	if len(args) > 1 {
 		params = args[1]
+	}
+	if len(args) > 2 {
+		jpath = args[2].String()
 	}
 
 	req, err := c.parseRequest(method, url, body, params)
@@ -65,7 +69,7 @@ func (c *Client) Request(method string, url goja.Value, args ...goja.Value) (*Re
 		return &Response{Response: r, client: c}, nil
 	}
 
-	resp, err := httpext.MakeRequest(c.moduleInstance.vu.Context(), state, req)
+	resp, err := httpext.MakeRequest(c.moduleInstance.vu.Context(), state, req, jpath)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +91,7 @@ func (c *Client) responseFromHTTPext(resp *httpext.Response) *Response {
 }
 
 // TODO: break this function up
+//
 //nolint:gocyclo, cyclop, funlen, gocognit
 func (c *Client) parseRequest(
 	method string, reqURL, body interface{}, params goja.Value,
