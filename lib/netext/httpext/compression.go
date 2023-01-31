@@ -190,7 +190,7 @@ func readResponseBody(
 	// Binary or string
 	switch respType {
 	case ResponseTypeText:
-		result = tojson(buf.String(), jpath)
+		result = tojson(buf, jpath)
 	case ResponseTypeBinary:
 		// Copy the data to a new slice before we return the buffer to the pool,
 		// because buf.Bytes() points to the underlying buffer byte slice.
@@ -206,10 +206,11 @@ func readResponseBody(
 	return result, respErr
 }
 
-func tojson(body string, jpath string) interface{} {
-	if len(jpath) > 0 && gjson.Valid(body) {
-		return gjson.Parse(body).Get(jpath).Value()
+func tojson(body *bytes.Buffer, jpath string) interface{} {
+	b := body.Bytes()
+	if len(jpath) > 0 && gjson.ValidBytes(b) {
+		return gjson.GetBytes(b, jpath).Value()
 	} else {
-		return body
+		return body.String()
 	}
 }
