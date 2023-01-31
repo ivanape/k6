@@ -43,7 +43,7 @@ func MakeBatchRequests(
 			defer hl.End()
 		}
 
-		resp, err := MakeRequest(ctx, state, req.ParsedHTTPRequest)
+		resp, err := MakeRequest(ctx, state, req.ParsedHTTPRequest, "")
 		if resp != nil {
 			processResponse(resp, req.ParsedHTTPRequest.ResponseType)
 			*req.Response = *resp

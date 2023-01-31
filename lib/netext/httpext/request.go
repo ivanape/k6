@@ -110,8 +110,9 @@ func updateK6Response(k6Response *Response, finishedReq *finishedRequest) {
 // MakeRequest makes http request for tor the provided ParsedHTTPRequest.
 //
 // TODO: split apart...
+//
 //nolint:cyclop, gocyclo, funlen, gocognit
-func MakeRequest(ctx context.Context, state *lib.State, preq *ParsedHTTPRequest) (*Response, error) {
+func MakeRequest(ctx context.Context, state *lib.State, preq *ParsedHTTPRequest, jpath string) (*Response, error) {
 	respReq := &Request{
 		Method:  preq.Req.Method,
 		URL:     preq.Req.URL.String(),
@@ -274,7 +275,7 @@ func MakeRequest(ctx context.Context, state *lib.State, preq *ParsedHTTPRequest)
 	}
 
 	if resErr == nil {
-		resp.Body, resErr = readResponseBody(state, preq.ResponseType, res, resErr)
+		resp.Body, resErr = readResponseBody(state, preq.ResponseType, res, resErr, jpath)
 		if resErr != nil && errors.Is(resErr, context.DeadlineExceeded) {
 			// TODO This can be more specific that the timeout happened in the middle of the reading of the body
 			resErr = NewK6Error(requestTimeoutErrorCode, requestTimeoutErrorCodeMsg, resErr)

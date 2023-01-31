@@ -12,6 +12,7 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/klauspost/compress/zstd"
+	"github.com/tidwall/gjson"
 
 	"go.k6.io/k6/lib"
 )
@@ -19,6 +20,7 @@ import (
 // CompressionType is used to specify what compression is to be used to compress the body of a
 // request
 // The conversion and validation methods are auto-generated with https://github.com/alvaroloes/enumer:
+//
 //go:generate enumer -type=CompressionType -transform=snake -trimprefix CompressionType -output compression_type_gen.go
 type CompressionType uint
 
@@ -119,6 +121,7 @@ func readResponseBody(
 	respType ResponseType,
 	resp *http.Response,
 	respErr error,
+	jpath string,
 ) (interface{}, error) {
 	if resp == nil || respErr != nil {
 		return nil, respErr
@@ -187,7 +190,7 @@ func readResponseBody(
 	// Binary or string
 	switch respType {
 	case ResponseTypeText:
-		result = buf.String()
+		result = tojson(buf.String(), jpath)
 	case ResponseTypeBinary:
 		// Copy the data to a new slice before we return the buffer to the pool,
 		// because buf.Bytes() points to the underlying buffer byte slice.
@@ -201,4 +204,12 @@ func readResponseBody(
 	}
 
 	return result, respErr
+}
+
+func tojson(body string, jpath string) interface{} {
+	if len(jpath) > 0 && gjson.Valid(body) {
+		return gjson.Parse(body).Get(jpath).Value()
+	} else {
+		return body
+	}
 }
